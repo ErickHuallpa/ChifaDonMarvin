@@ -6,43 +6,56 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    use HasFactory, Notifiable;
+    protected $table = 'users';
+
     /**
-     * Run the migrations.
+     * Los atributos que se pueden asignar en masa.
+     *
+     * @var array<int, string>
      */
-    public function up(): void
+    protected $fillable = [
+        'usuario',
+        'password',
+        'rol',
+        'estado',
+    ];
+
+    /**
+     * Los atributos que deben estar ocultos cuando el modelo se serializa.
+     *
+     * @var array<int, string>
+     */
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    /**
+     * Los atributos que se deben castear a otros tipos de datos.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'estado' => 'boolean',
+    ];
+
+    /**
+     * Relación con el modelo Persona (opcional, por la clave foránea)
+     */
+    public function persona()
     {
-        Schema::create('users', function (Blueprint $table) {
-            $table->id()->constrained('personas')->onDelete('cascade');
-            $table->string('usuario')->unique();
-            $table->string('password');
-            $table->enum('rol', ['admin', 'usuario'])->default('usuario');
-            $table->boolean('estado')->default(true);
-            $table->timestamps();
-        });
-
-        Schema::create('password_reset_tokens', function (Blueprint $table) {
-            $table->string('email')->primary();
-            $table->string('token');
-            $table->timestamp('created_at')->nullable();
-        });
-
-        Schema::create('sessions', function (Blueprint $table) {
-            $table->string('id')->primary();
-            $table->foreignId('user_id')->nullable()->index();
-            $table->string('ip_address', 45)->nullable();
-            $table->text('user_agent')->nullable();
-            $table->longText('payload');
-            $table->integer('last_activity')->index();
-        });
+        return $this->belongsTo(Persona::class, 'id', 'id');
     }
 
     /**
-     * Reverse the migrations.
+     * Si quieres devolver algún valor útil como iniciales (opcional)
      */
-    public function down(): void
+    public function initials(): string
     {
-        Schema::dropIfExists('users');
-        Schema::dropIfExists('password_reset_tokens');
-        Schema::dropIfExists('sessions');
+        // Suponiendo que haya relación con Persona, podrías hacer:
+        return $this->persona
+            ? strtoupper(substr($this->persona->nombre, 0, 1) . substr($this->persona->apellido, 0, 1))
+            : '';
     }
 };
